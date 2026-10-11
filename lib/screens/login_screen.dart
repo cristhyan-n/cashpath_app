@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cashpath_app/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
 
   @override
   void dispose() {
@@ -18,9 +20,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    debugPrint('email: ${_emailController.text}');
-    debugPrint('senha: ${_passwordController.text}');
+  Future<void> _handleLogin() async {
+    try {
+      final token = await _authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+      debugPrint('token: $token');
+    } catch (e) {
+      debugPrint('erro: $e');
+    }
   }
 
   @override
