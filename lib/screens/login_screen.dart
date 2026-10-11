@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cashpath_app/screens/home_screen.dart';
 import 'package:cashpath_app/services/auth_service.dart';
+import 'package:cashpath_app/services/token_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
+  final _tokenStorage = TokenStorage();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -32,8 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     String? error;
     try {
-      // O token será guardado no aparelho na próxima etapa.
-      await _authService.login(_emailController.text, _passwordController.text);
+      final token = await _authService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+      await _tokenStorage.save(token);
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');
     }
