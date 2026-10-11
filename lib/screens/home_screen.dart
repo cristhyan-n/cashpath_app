@@ -13,6 +13,7 @@ import 'package:cashpath_app/utils/formatters.dart';
 import 'package:cashpath_app/widgets/alerta_orcamento_tile.dart';
 import 'package:cashpath_app/widgets/resumo_card.dart';
 import 'package:cashpath_app/widgets/transacao_tile.dart';
+import 'package:cashpath_app/screens/projecao_screen.dart';
 
 typedef HomeData = ({
   List<Transacao> transacoes,
@@ -136,6 +137,14 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('CashPath'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.insights),
+            tooltip: 'Projeção',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ProjecaoScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Sair',
