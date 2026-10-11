@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cashpath_app/config/google_config.dart';
 
@@ -8,12 +9,12 @@ class GoogleAuthService {
   Future<String?> getIdToken() async {
     final googleSignIn = GoogleSignIn.instance;
 
-    if (!_initialized) {
-      await googleSignIn.initialize(serverClientId: googleServerClientId);
-      _initialized = true;
-    }
-
     try {
+      if (!_initialized) {
+        await googleSignIn.initialize(serverClientId: googleServerClientId);
+        _initialized = true;
+      }
+
       final account = await googleSignIn.authenticate();
       final idToken = account.authentication.idToken;
 
@@ -22,8 +23,12 @@ class GoogleAuthService {
       }
       return idToken;
     } on GoogleSignInException catch (e) {
+      debugPrint('Google Sign-In falhou: $e');
       if (e.code == GoogleSignInExceptionCode.canceled) return null;
       throw Exception('Não foi possível entrar com o Google.');
+    } catch (e) {
+      debugPrint('Google Sign-In erro inesperado: $e');
+      rethrow;
     }
   }
 }
