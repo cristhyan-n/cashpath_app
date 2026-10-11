@@ -27,7 +27,7 @@ class TransacaoTile extends StatelessWidget {
       ),
       subtitle: Text('$categoriaNome • ${formatDate(transacao.data)}'),
       trailing: Text(
-        '$sign R\$ ${transacao.valor.toStringAsFixed(2)}',
+        '$sign ${formatCurrency(transacao.valorCentavos)}',
         style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
