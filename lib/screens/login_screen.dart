@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cashpath_app/screens/home_screen.dart';
-import 'package:cashpath_app/services/auth_service.dart';
-import 'package:cashpath_app/services/token_storage.dart';
 import 'package:cashpath_app/screens/register_screen.dart';
+import 'package:cashpath_app/services/auth_service.dart';
+import 'package:cashpath_app/services/google_auth_service.dart';
+import 'package:cashpath_app/services/token_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
+  final _googleAuthService = GoogleAuthService();
   final _tokenStorage = TokenStorage();
 
   bool _isLoading = false;
@@ -27,7 +29,22 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  Future<void> _handleLogin() {
+    return _runLogin(
+      () => _authService.login(_emailController.text, _passwordController.text),
+    );
+  }
+
+  Future<void> _handleGoogleLogin() {
+    return _runLogin(() async {
+      final idToken = await _googleAuthService.getIdToken();
+      if (idToken == null) return null;
+      return _authService.loginWithGoogle(idToken);
+    });
+  }
+
+  /// Executa um fluxo de login. `obtainToken` devolve null se o usuário cancelou.
+  Future<void> _runLogin(Future<String?> Function() obtainToken) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -35,10 +52,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     String? error;
     try {
-      final token = await _authService.login(
-        _emailController.text,
-        _passwordController.text,
-      );
+      final token = await obtainToken();
+
+      if (token == null) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        return;
+      }
+
       await _tokenStorage.save(token);
     } catch (e) {
       error = e.toString().replaceFirst('Exception: ', '');
@@ -64,50 +85,61 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('CashPath')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Senha'),
-            ),
-            if (_errorMessage != null) ...[
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'E-mail'),
+              ),
               const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Senha'),
+              ),
+              if (_errorMessage != null) ...[
+                const SizedBox(height: 16),
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _handleLogin,
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Entrar'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _handleGoogleLogin,
+                icon: const Icon(Icons.account_circle_outlined),
+                label: const Text('Entrar com Google'),
+              ),
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegisterScreen(),
+                        ),
+                      ),
+                child: const Text('Criar conta'),
               ),
             ],
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin,
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Entrar'),
-            ),
-            TextButton(
-              onPressed: _isLoading
-                  ? null
-                  : () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                    ),
-              child: const Text('Criar conta'),
-            ),
-          ],
+          ),
         ),
       ),
     );

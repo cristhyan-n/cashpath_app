@@ -22,6 +22,23 @@ class AuthService {
     throw Exception('Erro ao fazer login (${response.statusCode}).');
   }
 
+  Future<String> loginWithGoogle(String idToken) async {
+    final response = await _post('/usuarios/login/google', {
+      'id_token': idToken,
+    });
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return data['access_token'] as String;
+    }
+
+    if (response.statusCode == 401) {
+      throw Exception('Não foi possível validar a conta Google.');
+    }
+
+    throw Exception('Erro ao entrar com o Google (${response.statusCode}).');
+  }
+
   Future<void> register(String name, String email, String password) async {
     final response = await _post('/usuarios', {
       'nome': name,
