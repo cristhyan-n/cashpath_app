@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cashpath_app/models/transacao.dart';
+import 'package:cashpath_app/utils/formatters.dart';
 
 class TransacaoTile extends StatelessWidget {
   const TransacaoTile({
@@ -24,17 +25,11 @@ class TransacaoTile extends StatelessWidget {
       title: Text(
         transacao.descricao.isEmpty ? categoriaNome : transacao.descricao,
       ),
-      subtitle: Text('$categoriaNome • ${_formatDate(transacao.data)}'),
+      subtitle: Text('$categoriaNome • ${formatDate(transacao.data)}'),
       trailing: Text(
         '$sign R\$ ${transacao.valor.toStringAsFixed(2)}',
         style: TextStyle(color: color, fontWeight: FontWeight.bold),
       ),
     );
   }
-}
-
-String _formatDate(DateTime date) {
-  final day = date.day.toString().padLeft(2, '0');
-  final month = date.month.toString().padLeft(2, '0');
-  return '$day/$month/${date.year}';
 }

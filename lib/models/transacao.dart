@@ -21,7 +21,7 @@ class Transacao {
     return Transacao(
       id: json['id'] as int,
       descricao: json['descricao'] as String? ?? '',
-      valor: (json['valor'] as num).toDouble(),
+      valor: (json['valor'] as num) / 100,
       data: DateTime.parse(json['data'] as String),
       tipo: json['tipo'] as String,
       categoriaId: json['categoria_id'] as int,
