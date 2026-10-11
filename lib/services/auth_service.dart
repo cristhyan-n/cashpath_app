@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:cashpath_app/config/api_config.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   Future<String> login(String email, String password) async {
@@ -9,6 +10,10 @@ class AuthService {
       'email': email,
       'senha': password,
     });
+
+    if (response.statusCode != 200) {
+      debugPrint('Google login ${response.statusCode}: ${response.body}');
+    }
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;

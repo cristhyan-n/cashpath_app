@@ -1,1 +1,2 @@
-const googleServerClientId = 'COLE_AQUI_O_ID_WEB.apps.googleusercontent.com';
+const googleServerClientId =
+    '472090128013-4achhq365mdbusc4cgrbknc61thi4rgc.apps.googleusercontent.com';
