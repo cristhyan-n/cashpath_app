@@ -6,15 +6,21 @@ class AuthService {
   static const _baseUrl = 'http://10.0.2.2:8000';
 
   Future<String> login(String email, String password) async {
-    final response = await http.post(
-      Uri.parse('$_baseUrl/usuarios/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'senha': password}), // nomes dos campos
-    );
+    http.Response response;
+
+    try {
+      response = await http.post(
+        Uri.parse('$_baseUrl/usuarios/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'senha': password}),
+      );
+    } on http.ClientException {
+      throw Exception('Não foi possível conectar ao servidor.');
+    }
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return data['access_token'] as String; // nome do campo do token
+      return data['access_token'] as String;
     }
 
     if (response.statusCode == 401) {

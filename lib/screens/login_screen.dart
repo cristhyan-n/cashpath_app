@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cashpath_app/screens/home_screen.dart';
 import 'package:cashpath_app/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,6 +14,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
+  bool _isLoading = false;
+  String? _errorMessage;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -21,15 +25,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    String? error;
     try {
-      final token = await _authService.login(
-        _emailController.text,
-        _passwordController.text,
-      );
-      debugPrint('token: $token');
+      // O token será guardado no aparelho na próxima etapa.
+      await _authService.login(_emailController.text, _passwordController.text);
     } catch (e) {
-      debugPrint('erro: $e');
+      error = e.toString().replaceFirst('Exception: ', '');
     }
+
+    if (!mounted) return;
+
+    if (error != null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error;
+      });
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
   }
 
   @override
@@ -52,10 +74,23 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
               decoration: const InputDecoration(labelText: 'Senha'),
             ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _handleLogin,
-              child: const Text('Entrar'),
+              onPressed: _isLoading ? null : _handleLogin,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Entrar'),
             ),
           ],
         ),
