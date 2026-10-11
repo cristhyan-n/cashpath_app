@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cashpath_app/screens/home_screen.dart';
 import 'package:cashpath_app/services/auth_service.dart';
 import 'package:cashpath_app/services/token_storage.dart';
+import 'package:cashpath_app/screens/register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -96,6 +97,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Text('Entrar'),
+            ),
+            TextButton(
+              onPressed: _isLoading
+                  ? null
+                  : () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    ),
+              child: const Text('Criar conta'),
             ),
           ],
         ),
