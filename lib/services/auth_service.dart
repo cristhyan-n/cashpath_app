@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:cashpath_app/config/api_config.dart';
 
 class AuthService {
-  static const _baseUrl = 'http://10.0.2.2:8000';
-
   Future<String> login(String email, String password) async {
     final response = await _post('/usuarios/login', {
       'email': email,
@@ -42,7 +41,7 @@ class AuthService {
   Future<http.Response> _post(String path, Map<String, dynamic> body) async {
     try {
       return await http.post(
-        Uri.parse('$_baseUrl$path'),
+        Uri.parse('$apiBaseUrl$path'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       );
