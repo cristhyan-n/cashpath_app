@@ -1,5 +1,6 @@
 import 'package:cashpath_app/models/transacao.dart';
 import 'package:cashpath_app/services/api_client.dart';
+import 'package:cashpath_app/utils/formatters.dart';
 
 class TransacaoService {
   final _api = ApiClient();
@@ -29,7 +30,7 @@ class TransacaoService {
       await _api.post('/transacoes', {
         'descricao': descricao,
         'valor': (valor * 100).round(),
-        'data': data.toIso8601String().substring(0, 10),
+        'data': formatApiDate(data),
         'tipo': tipo,
         'categoria_id': categoriaId,
       });

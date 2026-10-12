@@ -39,3 +39,7 @@ String formatCurrency(int centavos) {
   return '$sign'
       'R\$ $reais,$cents';
 }
+
+String formatApiDate(DateTime date) {
+  return date.toIso8601String().substring(0, 10);
+}
