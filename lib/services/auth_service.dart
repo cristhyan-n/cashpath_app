@@ -27,16 +27,23 @@ class AuthService {
       'id_token': idToken,
     });
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return data['access_token'] as String;
+    switch (response.statusCode) {
+      case 200:
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data['access_token'] as String;
+      case 401:
+        throw Exception('Não foi possível validar a conta Google.');
+      case 409:
+        throw Exception(
+          'Este e-mail já está cadastrado com senha. Entre com e-mail e senha.',
+        );
+      case 503:
+        throw Exception('Login com Google indisponível no momento.');
+      default:
+        throw Exception(
+          'Erro ao entrar com o Google (${response.statusCode}).',
+        );
     }
-
-    if (response.statusCode == 401) {
-      throw Exception('Não foi possível validar a conta Google.');
-    }
-
-    throw Exception('Erro ao entrar com o Google (${response.statusCode}).');
   }
 
   Future<void> register(String name, String email, String password) async {
