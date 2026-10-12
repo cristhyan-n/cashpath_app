@@ -1,11 +1,13 @@
 class AlertaOrcamento {
   const AlertaOrcamento({
+    required this.categoriaId,
     required this.categoriaNome,
     required this.valorLimiteCentavos,
     required this.valorGastoCentavos,
     required this.status,
   });
 
+  final int categoriaId;
   final String categoriaNome;
   final int valorLimiteCentavos;
   final int valorGastoCentavos;
@@ -21,6 +23,7 @@ class AlertaOrcamento {
 
   factory AlertaOrcamento.fromJson(Map<String, dynamic> json) {
     return AlertaOrcamento(
+      categoriaId: json['categoria_id'] as int,
       categoriaNome: json['categoria_nome'] as String,
       valorLimiteCentavos: json['valor_limite'] as int,
       valorGastoCentavos: json['valor_gasto'] as int,

@@ -7,12 +7,14 @@ import 'package:cashpath_app/services/token_storage.dart';
 class UnauthorizedException implements Exception {}
 
 class ApiException implements Exception {
-  const ApiException(this.statusCode);
+  const ApiException(this.statusCode, {this.detail});
 
   final int statusCode;
+  final String? detail;
 
   @override
-  String toString() => 'Erro na comunicação com o servidor ($statusCode).';
+  String toString() =>
+      detail ?? 'Erro na comunicação com o servidor ($statusCode).';
 }
 
 class ApiClient {
@@ -30,6 +32,16 @@ class ApiClient {
   }
 
   Uri _uri(String path) => Uri.parse('$apiBaseUrl$path');
+
+  String? _extractDetail(http.Response response) {
+    try {
+      final body = jsonDecode(utf8.decode(response.bodyBytes));
+      final detail = body is Map<String, dynamic> ? body['detail'] : null;
+      return detail is String ? detail : null;
+    } on FormatException {
+      return null;
+    }
+  }
 
   Future<dynamic> _send(
     Future<http.Response> Function(Map<String, String> headers) request,
@@ -53,7 +65,7 @@ class ApiClient {
     }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException(response.statusCode);
+      throw ApiException(response.statusCode, detail: _extractDetail(response));
     }
 
     if (response.body.isEmpty) return null;
