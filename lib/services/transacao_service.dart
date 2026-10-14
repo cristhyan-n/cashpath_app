@@ -39,4 +39,12 @@ class TransacaoService {
       throw Exception('Erro ao salvar transação (${e.statusCode}).');
     }
   }
+
+  Future<void> excluir(int transacaoId) async {
+    try {
+      await _api.delete('/transacoes/$transacaoId');
+    } on ApiException catch (e) {
+      throw Exception(e.detail ?? 'Não foi possível excluir a transação.');
+    }
+  }
 }

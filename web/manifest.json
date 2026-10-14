@@ -1,11 +1,11 @@
 {
-    "name": "cashpath_app",
-    "short_name": "cashpath_app",
+    "name": "CashPath — finanças no seu caminho",
+    "short_name": "CashPath",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F4F7F3",
+    "theme_color": "#12352B",
+    "description": "Organize seus gastos e acompanhe seus planos com mais clareza.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

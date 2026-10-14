@@ -117,11 +117,17 @@ class _ProjecaoScreenState extends State<ProjecaoScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const Text('Meta mensal sugerida'),
+                const Text('Aporte mensal sugerido'),
                 const SizedBox(height: 4),
                 Text(
                   formatCurrency(projecao.metaSugeridaCentavos),
                   style: textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Sugestão de até 20% da renda base, limitada ao saldo após despesas. Registre o valor em uma meta para contabilizá-lo.',
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodySmall,
                 ),
               ],
             ),
@@ -129,20 +135,32 @@ class _ProjecaoScreenState extends State<ProjecaoScreen> {
         ),
         const SizedBox(height: 8),
         ListTile(
-          title: const Text('Saldo projetado'),
-          trailing: Text(
-            formatCurrency(projecao.saldoProjetadoCentavos),
-            style: TextStyle(color: saldoColor, fontWeight: FontWeight.bold),
+          title: const Text('Saldo após despesas'),
+          subtitle: const Text(
+            'Aportes em metas são contabilizados separadamente em Economia.',
+          ),
+          trailing: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              formatCurrency(projecao.saldoProjetadoCentavos),
+              style: TextStyle(color: saldoColor, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
         ListTile(
           title: const Text('Renda base'),
           subtitle: Text(fonteRenda),
-          trailing: Text(formatCurrency(projecao.rendaBaseCentavos)),
+          trailing: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(formatCurrency(projecao.rendaBaseCentavos)),
+          ),
         ),
         ListTile(
           title: const Text('Média de despesas por mês'),
-          trailing: Text(formatCurrency(projecao.mediaDespesasCentavos)),
+          trailing: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(formatCurrency(projecao.mediaDespesasCentavos)),
+          ),
         ),
         const SizedBox(height: 8),
         Text(

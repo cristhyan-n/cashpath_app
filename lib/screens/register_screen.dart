@@ -17,6 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
 
   bool _isLoading = false;
+  bool _mostrarSenha = false;
+  bool _mostrarConfirmacao = false;
   String? _errorMessage;
 
   @override
@@ -79,10 +81,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cadastro realizado! Faça login.')),
-    );
-    Navigator.pop(context);
+    setState(() {
+      _isLoading = false;
+    });
+    Navigator.pop(context, _emailController.text.trim());
   }
 
   @override
@@ -113,16 +115,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Senha'),
+                  obscureText: !_mostrarSenha,
+                  decoration: InputDecoration(
+                    labelText: 'Senha',
+                    suffixIcon: IconButton(
+                      tooltip: _mostrarSenha ? 'Ocultar senha' : 'Mostrar senha',
+                      onPressed: () => setState(
+                        () => _mostrarSenha = !_mostrarSenha,
+                      ),
+                      icon: Icon(
+                        _mostrarSenha
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                    ),
+                  ),
                   validator: _validatePassword,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: !_mostrarConfirmacao,
+                  decoration: InputDecoration(
                     labelText: 'Confirmar senha',
+                    suffixIcon: IconButton(
+                      tooltip: _mostrarConfirmacao
+                          ? 'Ocultar senha'
+                          : 'Mostrar senha',
+                      onPressed: () => setState(
+                        () => _mostrarConfirmacao = !_mostrarConfirmacao,
+                      ),
+                      icon: Icon(
+                        _mostrarConfirmacao
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                    ),
                   ),
                   validator: _validateConfirmPassword,
                 ),

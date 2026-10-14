@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -18,17 +19,34 @@ class ApiException implements Exception {
 }
 
 class ApiClient {
+  static final http.Client _httpClient = http.Client();
+  static const _requestTimeout = Duration(seconds: 15);
+
   final _tokenStorage = TokenStorage();
 
   Future<dynamic> get(String path) {
-    return _send((headers) => http.get(_uri(path), headers: headers));
+    return _send((headers) => _httpClient.get(_uri(path), headers: headers));
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> body) {
     return _send(
-      (headers) =>
-          http.post(_uri(path), headers: headers, body: jsonEncode(body)),
+      (headers) => _httpClient.post(
+        _uri(path),
+        headers: headers,
+        body: jsonEncode(body),
+      ),
     );
+  }
+
+  Future<dynamic> put(String path, Map<String, dynamic> body) {
+    return _send(
+      (headers) =>
+          _httpClient.put(_uri(path), headers: headers, body: jsonEncode(body)),
+    );
+  }
+
+  Future<dynamic> delete(String path) {
+    return _send((headers) => _httpClient.delete(_uri(path), headers: headers));
   }
 
   Uri _uri(String path) => Uri.parse('$apiBaseUrl$path');
@@ -54,7 +72,9 @@ class ApiClient {
       response = await request({
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
-      });
+      }).timeout(_requestTimeout);
+    } on TimeoutException {
+      throw Exception('O servidor demorou para responder. Tente novamente.');
     } on http.ClientException {
       throw Exception('Não foi possível conectar ao servidor.');
     }

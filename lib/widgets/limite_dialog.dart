@@ -5,22 +5,26 @@ class LimiteDialog extends StatefulWidget {
   const LimiteDialog({
     super.key,
     required this.categoriaNome,
+    this.valorLabel = 'Limite mensal',
     this.limiteAtualCentavos,
   });
 
   final String categoriaNome;
+  final String valorLabel;
   final int? limiteAtualCentavos;
 
   /// Devolve o limite em centavos, ou null se o usuário cancelou.
   static Future<int?> show(
     BuildContext context, {
     required String categoriaNome,
+    String valorLabel = 'Limite mensal',
     int? limiteAtualCentavos,
   }) {
     return showDialog<int>(
       context: context,
       builder: (_) => LimiteDialog(
         categoriaNome: categoriaNome,
+        valorLabel: valorLabel,
         limiteAtualCentavos: limiteAtualCentavos,
       ),
     );
@@ -74,8 +78,8 @@ class _LimiteDialogState extends State<LimiteDialog> {
           controller: _controller,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: 'Limite mensal',
+          decoration: InputDecoration(
+            labelText: widget.valorLabel,
             prefixText: 'R\$ ',
           ),
           validator: _validate,

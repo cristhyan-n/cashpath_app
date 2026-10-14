@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cashpath_app/screens/home_screen.dart';
 import 'package:cashpath_app/screens/login_screen.dart';
 import 'package:cashpath_app/services/token_storage.dart';
+import 'package:cashpath_app/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,9 @@ class CashPathApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'CashPath',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
       home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
     );
   }
