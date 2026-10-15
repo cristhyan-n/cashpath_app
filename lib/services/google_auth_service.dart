@@ -15,6 +15,18 @@ class GoogleAuthService {
         _initialized = true;
       }
 
+      // Authenticate is always started from an explicit button tap. Clear only
+      // the app's current Google session first so the native account chooser
+      // can offer another account instead of silently reusing the last one.
+      // This does not revoke consent; disconnect() is reserved for account
+      // deletion.
+      try {
+        await googleSignIn.signOut();
+      } catch (e) {
+        // Signing out can fail when the device has no previous Google
+        // session. Continue so Credential Manager can offer another account.
+        debugPrint('Não havia sessão Google anterior para encerrar: $e');
+      }
       final account = await googleSignIn.authenticate();
       final idToken = account.authentication.idToken;
 
@@ -30,5 +42,15 @@ class GoogleAuthService {
       debugPrint('Google Sign-In erro inesperado: $e');
       rethrow;
     }
+  }
+
+  /// Revokes the app's Google authorization when a CashPath account is deleted.
+  Future<void> disconnect() async {
+    final googleSignIn = GoogleSignIn.instance;
+    if (!_initialized) {
+      await googleSignIn.initialize(serverClientId: googleServerClientId);
+      _initialized = true;
+    }
+    await googleSignIn.disconnect();
   }
 }

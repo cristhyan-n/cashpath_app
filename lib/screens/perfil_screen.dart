@@ -4,6 +4,7 @@ import 'package:cashpath_app/services/api_client.dart';
 import 'package:cashpath_app/utils/parsers.dart';
 import 'package:cashpath_app/services/token_storage.dart';
 import 'package:cashpath_app/screens/login_screen.dart';
+import 'package:cashpath_app/services/google_auth_service.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -13,6 +14,7 @@ class PerfilScreen extends StatefulWidget {
 
 class _PerfilScreenState extends State<PerfilScreen> {
   final _service = PerfilService();
+  final _googleAuthService = GoogleAuthService();
   final _form = GlobalKey<FormState>();
   final _nome = TextEditingController();
   final _email = TextEditingController();
@@ -23,6 +25,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   bool _isGoogleAccount = false;
   bool _salvandoRenda = false;
   bool _resetando = false;
+  bool _excluindoConta = false;
   bool _mostrarSenhaAtual = false;
   bool _mostrarNovaSenha = false;
   PerfilFinanceiro? _perfilFinanceiro;
@@ -77,6 +80,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _saveRenda() async {
+    if (_excluindoConta || _resetando) return;
     final centavos = parseCentavos(_renda.text);
     if (centavos == null || centavos <= 0) {
       setState(() => _erro = 'Informe uma renda mensal maior que zero.');
@@ -128,7 +132,113 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
   }
 
+  Future<void> _excluirConta() async {
+    if (_resetando || _excluindoConta) return;
+    final confirmar =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            icon: const Icon(Icons.delete_forever_outlined),
+            title: const Text('Excluir sua conta?'),
+            content: const Text(
+              'Sua conta CashPath e os dados associados, como transações, '
+              'orçamentos, metas e categorias personalizadas, serão apagados '
+              'permanentemente. Esta ação não pode ser desfeita. '
+              'Sua Conta Google não será excluída.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Não, manter conta'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
+                ),
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Sim, excluir conta'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmar || !mounted) return;
+    setState(() {
+      _excluindoConta = true;
+      _erro = null;
+    });
+
+    try {
+      await _service.excluirConta();
+    } on UnauthorizedException {
+      try {
+        await TokenStorage().delete();
+      } catch (e) {
+        debugPrint(
+          'Não foi possível limpar o token de uma sessão expirada: $e',
+        );
+      }
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (_) => false,
+      );
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Sua sessão expirou. Entre novamente para continuar.'),
+        ),
+      );
+      return;
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _excluindoConta = false;
+          _erro = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+      return;
+    }
+
+    // A exclusão no servidor já foi concluída. Falhas no dispositivo ou no
+    // serviço Google não devem transformar isso em uma falsa falha de exclusão.
+    try {
+      await TokenStorage().delete();
+    } catch (e) {
+      debugPrint(
+        'Não foi possível limpar o token local após excluir a conta: $e',
+      );
+    }
+
+    String? erroDesconexaoGoogle;
+    if (_isGoogleAccount) {
+      try {
+        await _googleAuthService.disconnect();
+      } catch (e) {
+        debugPrint('Não foi possível desconectar o Google: $e');
+        erroDesconexaoGoogle =
+            'A conta CashPath foi excluída, mas não foi possível remover agora '
+            'o vínculo no Google. Você pode removê-lo nas configurações da sua Conta Google.';
+      }
+    }
+
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+    if (erroDesconexaoGoogle != null) {
+      messenger.showSnackBar(SnackBar(content: Text(erroDesconexaoGoogle)));
+    }
+  }
+
   Future<void> _save() async {
+    if (_excluindoConta || _resetando) return;
     if (!_form.currentState!.validate()) return;
     final emailNovo = _email.text.trim();
     final emailAlterado = emailNovo.toLowerCase() != _emailOriginal;
@@ -226,7 +336,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
-                    onPressed: _salvandoRenda ? null : _saveRenda,
+                    onPressed: _salvandoRenda || _excluindoConta || _resetando
+                        ? null
+                        : _saveRenda,
                     icon: const Icon(Icons.savings_outlined),
                     label: Text(
                       _salvandoRenda ? 'Salvando…' : 'Atualizar renda',
@@ -304,7 +416,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: _save,
+                    onPressed: _excluindoConta || _resetando ? null : _save,
                     child: const Text('Salvar alterações'),
                   ),
                   const SizedBox(height: 36),
@@ -320,10 +432,31 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
                   const SizedBox(height: 10),
                   OutlinedButton.icon(
-                    onPressed: _resetando ? null : _resetarDados,
+                    onPressed: _resetando || _excluindoConta
+                        ? null
+                        : _resetarDados,
                     icon: const Icon(Icons.restart_alt_rounded),
                     label: Text(
                       _resetando ? 'Apagando dados…' : 'Recomeçar do zero',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: _resetando || _excluindoConta
+                        ? null
+                        : _excluirConta,
+                    icon: _excluindoConta
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.delete_forever_outlined),
+                    label: Text(
+                      _excluindoConta ? 'Excluindo conta…' : 'Excluir conta',
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Theme.of(context).colorScheme.error,

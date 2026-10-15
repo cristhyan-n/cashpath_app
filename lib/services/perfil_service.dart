@@ -57,4 +57,12 @@ class PerfilService {
       throw Exception(e.detail ?? 'Não foi possível redefinir os dados.');
     }
   }
+
+  Future<void> excluirConta() async {
+    try {
+      await _api.delete('/usuarios/me');
+    } on ApiException catch (e) {
+      throw Exception(e.detail ?? 'Não foi possível excluir a conta.');
+    }
+  }
 }
